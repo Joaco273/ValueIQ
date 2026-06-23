@@ -1,0 +1,4 @@
+New-Item data/.gitkeep -Force
+New-Item models/.gitkeep -Force
+New-Item notebooks/.gitkeep -Force
+New-Item src/.gitkeep -Force
