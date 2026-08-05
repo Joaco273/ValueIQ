@@ -4,3 +4,4 @@ data/processed/
 __pycache__/
 *.pyc
 models/
+data/vector_store/
