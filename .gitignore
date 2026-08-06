@@ -5,3 +5,4 @@ __pycache__/
 *.pyc
 models/
 data/vector_store/
+.env
