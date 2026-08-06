@@ -6,3 +6,5 @@ __pycache__/
 models/
 data/vector_store/
 .env
+frontend/node_modules/
+frontend/dist/
