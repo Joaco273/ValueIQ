@@ -11,6 +11,8 @@ from sentence_transformers import SentenceTransformer
 from google import genai
 from dotenv import load_dotenv
 
+cleaned_df = pd.read_csv('../data/processed/cleaned.csv')
+
 load_dotenv()
 
 app = FastAPI()
@@ -54,23 +56,26 @@ class PropertyInput(BaseModel):
     neighborhood: str = "NAmes"
     kitchen_qual: str = "TA"
 
+
 def predict_price(inputs: PropertyInput) -> float:
-    template = pd.read_csv('../data/processed/cleaned.csv')
-    row = template.iloc[0].copy()
+    # Work on a copy of the full dataset
+    df = cleaned_df.copy()
+    
+    # Modify the first row with user inputs
+    df.loc[0, 'Gr Liv Area'] = inputs.gr_liv_area
+    df.loc[0, 'Overall Qual'] = inputs.overall_qual
+    df.loc[0, 'Year Built'] = inputs.year_built
+    df.loc[0, 'Full Bath'] = inputs.full_bath
+    df.loc[0, 'Bedroom AbvGr'] = inputs.bedroom_abvgr
+    df.loc[0, 'Garage Cars'] = inputs.garage_cars
+    df.loc[0, 'Total Bsmt SF'] = inputs.total_bsmt_sf
+    df.loc[0, 'Neighborhood'] = inputs.neighborhood
+    df.loc[0, 'Kitchen Qual'] = inputs.kitchen_qual
 
-    row['Gr Liv Area'] = inputs.gr_liv_area
-    row['Overall Qual'] = inputs.overall_qual
-    row['Year Built'] = inputs.year_built
-    row['Full Bath'] = inputs.full_bath
-    row['Bedroom AbvGr'] = inputs.bedroom_abvgr
-    row['Garage Cars'] = inputs.garage_cars
-    row['Total Bsmt SF'] = inputs.total_bsmt_sf
-    row['Neighborhood'] = inputs.neighborhood
-    row['Kitchen Qual'] = inputs.kitchen_qual
+    # Drop target
+    df = df.drop(columns=['SalePrice'], errors='ignore')
 
-    row_df = pd.DataFrame([row])
-    row_df = row_df.drop(columns=['SalePrice'], errors='ignore')
-
+    # Ordinal encoding
     quality_map = {'Ex': 5, 'Gd': 4, 'TA': 3, 'Fa': 2, 'Po': 1, 'No': 0}
     ordinal_cols = [
         'Exter Qual', 'Exter Cond', 'Bsmt Qual', 'Bsmt Cond',
@@ -78,35 +83,38 @@ def predict_price(inputs: PropertyInput) -> float:
         'Garage Qual', 'Garage Cond'
     ]
     for col in ordinal_cols:
-        if col in row_df.columns:
-            row_df[col] = row_df[col].map(quality_map)
+        if col in df.columns:
+            df[col] = df[col].map(quality_map)
 
-    row_df['Bsmt Exposure'] = row_df['Bsmt Exposure'].map(
+    df['Bsmt Exposure'] = df['Bsmt Exposure'].map(
         {'Gd': 4, 'Av': 3, 'Mn': 2, 'No': 1, 'no': 0}
     )
-    row_df['Garage Finish'] = row_df['Garage Finish'].map(
+    df['Garage Finish'] = df['Garage Finish'].map(
         {'Fin': 3, 'RFn': 2, 'Unf': 1, 'No': 0}
     )
-    row_df['BsmtFin Type 1'] = row_df['BsmtFin Type 1'].map(
-        {'GLQ': 6, 'ALQ': 5, 'BLQ': 4, 'Rec': 3,
-         'LwQ': 2, 'Unf': 1, 'No': 0}
+    df['BsmtFin Type 1'] = df['BsmtFin Type 1'].map(
+        {'GLQ': 6, 'ALQ': 5, 'BLQ': 4, 'Rec': 3, 'LwQ': 2, 'Unf': 1, 'No': 0}
     )
-    row_df['BsmtFin Type 2'] = row_df['BsmtFin Type 2'].map(
-        {'GLQ': 6, 'ALQ': 5, 'BLQ': 4, 'Rec': 3,
-         'LwQ': 2, 'Unf': 1, 'No': 0}
+    df['BsmtFin Type 2'] = df['BsmtFin Type 2'].map(
+        {'GLQ': 6, 'ALQ': 5, 'BLQ': 4, 'Rec': 3, 'LwQ': 2, 'Unf': 1, 'No': 0}
     )
 
-    drop_cols = ['Order', 'PID', 'Mo Sold', 'Yr Sold']
-    row_df = row_df.drop(columns=drop_cols, errors='ignore')
+    # Drop identifiers
+    df = df.drop(columns=['Order', 'PID', 'Mo Sold', 'Yr Sold'], errors='ignore')
 
-    nominal_cols = row_df.select_dtypes(include='str').columns.tolist()
-    row_df = pd.get_dummies(row_df, columns=nominal_cols, drop_first=True)
-    row_df = row_df.reindex(columns=feature_cols, fill_value=0)
+    # One-hot encode against full dataset
+    nominal_cols = df.select_dtypes(include='str').columns.tolist()
+    df = pd.get_dummies(df, columns=nominal_cols, drop_first=True)
 
+    # Align columns
+    df = df.reindex(columns=feature_cols, fill_value=0)
+
+    # Scale
     numeric_cols = X_train.select_dtypes(include='number').columns.tolist()
-    row_df[numeric_cols] = scaler.transform(row_df[numeric_cols])
+    df[numeric_cols] = scaler.transform(df[numeric_cols])
 
-    log_price = ridge.predict(row_df)[0]
+    # Predict only for row 0
+    log_price = ridge.predict(df.iloc[[0]])[0]
     return float(np.expm1(log_price))
 
 def retrieve_comps(inputs: PropertyInput) -> list:
