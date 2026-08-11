@@ -1,4 +1,5 @@
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
 
 const NEIGHBORHOODS = [
   "NAmes", "CollgCr", "OldTown", "Edwards", "Somerst",
@@ -208,7 +209,13 @@ export default function App() {
             onClick={handleSubmit}
             disabled={loading}
           >
-            {loading ? "Analyzing... (this may take 30-60s)" : "Analyze Property"}
+            {loading ? (
+              <span>
+                ⏳ Analyzing property... this may take 30–60s
+              </span>
+            ) : (
+              "Analyze Property →"
+            )}
           </button>
         </div>
 
@@ -250,6 +257,15 @@ export default function App() {
                   </p>
                 </div>
               </div>
+              <p style={{
+                fontSize: "0.75rem",
+                color: "#94a3b8",
+                marginTop: "1rem",
+                textAlign: "center"
+              }}>
+                Prediction based on Ames, Iowa housing data.
+                Not a substitute for professional appraisal.
+              </p>
             </div>
 
             {/* Comps */}
@@ -269,9 +285,81 @@ export default function App() {
             <div style={styles.card}>
               <h2 style={styles.cardTitle}>Negotiation Strategy</h2>
               <div style={styles.strategy}>
-                {result.strategy.split("\n").map((line, i) => (
-                  <p key={i} style={styles.strategyLine}>{line}</p>
-                ))}
+                <ReactMarkdown
+                  components={{
+                    h3: ({ children }) => (
+                      <h3 style={{
+                        color: "#1e293b",
+                        fontSize: "1rem",
+                        fontWeight: "700",
+                        margin: "1.25rem 0 0.5rem 0",
+                        paddingBottom: "0.25rem",
+                        borderBottom: "1px solid #f1f5f9"
+                      }}>{children}</h3>
+                    ),
+                    p: ({ children }) => (
+                      <p style={{
+                        color: "#334155",
+                        fontSize: "0.95rem",
+                        lineHeight: "1.7",
+                        margin: "0.5rem 0"
+                      }}>{children}</p>
+                    ),
+                    li: ({ children }) => (
+                      <li style={{
+                        color: "#334155",
+                        fontSize: "0.95rem",
+                        lineHeight: "1.7",
+                        marginBottom: "0.25rem"
+                      }}>{children}</li>
+                    ),
+                    ul: ({ children }) => (
+                      <ul style={{
+                        paddingLeft: "1.25rem",
+                        margin: "0.5rem 0"
+                      }}>{children}</ul>
+                    ),
+                    ol: ({ children }) => (
+                      <ol style={{
+                        paddingLeft: "1.25rem",
+                        margin: "0.5rem 0"
+                      }}>{children}</ol>
+                    ),
+                    strong: ({ children }) => (
+                      <strong style={{
+                        color: "#1e293b",
+                        fontWeight: "700"
+                      }}>{children}</strong>
+                    ),
+                    table: ({ children }) => (
+                      <table style={{
+                        width: "100%",
+                        borderCollapse: "collapse",
+                        margin: "1rem 0",
+                        fontSize: "0.9rem"
+                      }}>{children}</table>
+                    ),
+                    th: ({ children }) => (
+                      <th style={{
+                        background: "#f1f5f9",
+                        padding: "0.5rem 0.75rem",
+                        textAlign: "left",
+                        fontWeight: "700",
+                        color: "#1e293b",
+                        border: "1px solid #e2e8f0"
+                      }}>{children}</th>
+                    ),
+                    td: ({ children }) => (
+                      <td style={{
+                        padding: "0.5rem 0.75rem",
+                        color: "#334155",
+                        border: "1px solid #e2e8f0"
+                      }}>{children}</td>
+                    ),
+                  }}
+                >
+                  {result.strategy}
+                </ReactMarkdown>
               </div>
             </div>
           </div>
