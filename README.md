@@ -56,7 +56,7 @@ The system has four stages:
 This project uses publicly available, aggregated datasets — it does **not** 
 scrape or use live Zillow listings or Zestimate data.
 
-- Housing data: [Ames Iowa Housing Data](https://www.kaggle.com/datasets/marcopalermo/housing) via Kaggle
+- Housing data: [Ames Iowa Housing Data](https://www.kaggle.com/datasets/marcopale/housing) via Kaggle
 
 Predictions are based on Ames, Iowa housing data and are not a substitute 
 for professional appraisal.
