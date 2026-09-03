@@ -3,8 +3,6 @@ data/processed/
 .venv/
 __pycache__/
 *.pyc
-models/
-data/vector_store/
 .env
 frontend/node_modules/
 frontend/dist/
